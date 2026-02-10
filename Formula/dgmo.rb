@@ -1,8 +1,8 @@
 class Dgmo < Formula
   desc "DGMO diagram markup language — render .dgmo files to PNG/SVG"
   homepage "https://github.com/diagrammo/dgmo"
-  url "https://registry.npmjs.org/@diagrammo/dgmo/-/dgmo-0.2.0.tgz"
-  sha256 "2bae6e0cc71d23bc9b04d651a6cdb5de81a515b03c6146647c9a9c31af8d4333"
+  url "https://registry.npmjs.org/@diagrammo/dgmo/-/dgmo-0.2.1.tgz"
+  sha256 "0ab7efcd683f7660c26e6e7fddf772939fab9f2afece958a6ecfa8bd71bd67ca"
   license "MIT"
 
   depends_on "node"
@@ -10,6 +10,12 @@ class Dgmo < Formula
   def install
     system "npm", "install", *std_npm_args
     bin.install_symlink libexec.glob("bin/*")
+
+    # cli.cjs bundles all JS deps; only @resvg/resvg-js (native binary) needed
+    node_modules = libexec/"lib/node_modules/@diagrammo/dgmo/node_modules"
+    node_modules.children.each do |child|
+      child.rmtree unless child.basename.to_s == "@resvg"
+    end
   end
 
   test do
