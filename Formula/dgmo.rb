@@ -1,8 +1,8 @@
 class Dgmo < Formula
   desc "DGMO diagram markup language — render .dgmo files to PNG/SVG"
   homepage "https://github.com/diagrammo/dgmo"
-  url "https://registry.npmjs.org/@diagrammo/dgmo/-/dgmo-0.2.1.tgz"
-  sha256 "0ab7efcd683f7660c26e6e7fddf772939fab9f2afece958a6ecfa8bd71bd67ca"
+  url "https://registry.npmjs.org/@diagrammo/dgmo/-/dgmo-0.2.2.tgz"
+  sha256 "9a01793bb8ecebf7e286c0d7c3ddd78c4b11be57e6cf9f0d3463339466b2bf53"
   license "MIT"
 
   depends_on "node"
@@ -16,6 +16,11 @@ class Dgmo < Formula
     node_modules.children.each do |child|
       child.rmtree unless child.basename.to_s == "@resvg"
     end
+
+    # Strip library build artifacts not needed by the CLI
+    pkg = libexec/"lib/node_modules/@diagrammo/dgmo"
+    rm_r pkg/"src"
+    Dir[pkg/"dist/index.*"].each { |f| rm f }
   end
 
   test do
