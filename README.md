@@ -54,3 +54,35 @@ brew upgrade dgmo
 brew uninstall dgmo
 brew untap diagrammo/dgmo
 ```
+
+---
+
+## Maintainer: Updating the formula
+
+When a new version of `@diagrammo/dgmo` is published to npm:
+
+1. Get the new tarball URL and sha256:
+   ```bash
+   VERSION=0.2.7  # new version
+   curl -sL "https://registry.npmjs.org/@diagrammo/dgmo/-/dgmo-${VERSION}.tgz" | shasum -a 256
+   ```
+
+2. Update `Formula/dgmo.rb`:
+   - `url` → new tarball URL with version
+   - `sha256` → new hash from step 1
+
+3. Test locally:
+   ```bash
+   brew install --build-from-source Formula/dgmo.rb
+   dgmo --version    # should print new version
+   brew test dgmo    # runs the formula test block
+   ```
+
+4. Commit and push:
+   ```bash
+   git add Formula/dgmo.rb
+   git commit -m "Update dgmo to ${VERSION}"
+   git push
+   ```
+
+Users will pick up the update on their next `brew update && brew upgrade dgmo`.
