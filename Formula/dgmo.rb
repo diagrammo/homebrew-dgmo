@@ -23,6 +23,13 @@ class Dgmo < Formula
     Dir[pkg/"dist/index.*"].each { |f| rm f }
   end
 
+  def caveats
+    <<~EOS
+      To add the dgmo skill to Claude Code (enables /dgmo in any project):
+        dgmo --install-claude-skill
+    EOS
+  end
+
   test do
     assert_match version.to_s, shell_output("#{bin}/dgmo --version")
   end
