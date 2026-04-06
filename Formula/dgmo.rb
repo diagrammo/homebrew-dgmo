@@ -1,8 +1,8 @@
 class Dgmo < Formula
   desc "DGMO diagram markup language — render .dgmo files to PNG/SVG"
   homepage "https://github.com/diagrammo/dgmo"
-  url "https://registry.npmjs.org/@diagrammo/dgmo/-/dgmo-0.8.12.tgz"
-  sha256 "438f259842966aea66d3e4e381293a1bf84ce6af954f82c840f4b7a7b2f07f87"
+  url "https://registry.npmjs.org/@diagrammo/dgmo/-/dgmo-0.8.13.tgz"
+  sha256 "14df9459e2d8d53a8552d30cf3218dc1fe6a889716f86d2fe3a37d681de9dd93"
   license "MIT"
 
   depends_on "node"
@@ -11,15 +11,12 @@ class Dgmo < Formula
     system "npm", "install", *std_npm_args
     bin.install_symlink libexec.glob("bin/*")
 
-    # cli.cjs bundles all JS deps; only @resvg/resvg-js (native binary) needed
-    node_modules = libexec/"lib/node_modules/@diagrammo/dgmo/node_modules"
-    node_modules.children.each do |child|
-      child.rmtree unless child.basename.to_s == "@resvg"
-    end
-
-    # Strip library build artifacts not needed by the CLI
+    # cli.cjs externalizes @resvg/resvg-js and jsdom; both load assets via fs
+    # at runtime and pull in transitive deps, so the full node_modules tree
+    # must remain intact. Only strip library build artifacts not needed by
+    # the CLI.
     pkg = libexec/"lib/node_modules/@diagrammo/dgmo"
-    rm_r pkg/"src"
+    rm_r pkg/"src" if (pkg/"src").exist?
     Dir[pkg/"dist/index.*"].each { |f| rm f }
   end
 
