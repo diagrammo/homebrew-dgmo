@@ -28,7 +28,7 @@ class Dgmo < Formula
 
       set -u
 
-      VERSION="0.1.0"
+      VERSION="0.1.1"
       DOWNLOAD_URL="https://diagrammo.app/download"
 
       case "${1:-}" in
@@ -62,7 +62,22 @@ class Dgmo < Formula
         APP="$HOME/Applications/Diagrammo.app"
       fi
 
+      # Absolutize relative path args before exec'ing `open` — `open -a`
+      # does not consistently absolutize, and a relative path arriving at
+      # RunEvent::Opened fails std::fs::metadata against the app's cwd
+      # and produces a blank app.
       if [ -n "$APP" ]; then
+        n=$#
+        while [ "$n" -gt 0 ]; do
+          arg=$1
+          shift
+          case "$arg" in
+            /*) ;;
+            *) arg="$PWD/$arg" ;;
+          esac
+          set -- "$@" "$arg"
+          n=$((n - 1))
+        done
         exec open -a "$APP" "$@"
       fi
 
@@ -135,6 +150,6 @@ class Dgmo < Formula
   test do
     assert_match version.to_s, shell_output("#{bin}/dgmo --version")
     assert_match "Usage: diagrammo", shell_output("#{bin}/diagrammo --help")
-    assert_equal "diagrammo 0.1.0", shell_output("#{bin}/diagrammo --version").strip
+    assert_equal "diagrammo 0.1.1", shell_output("#{bin}/diagrammo --version").strip
   end
 end
