@@ -1,8 +1,8 @@
 class Dgmo < Formula
   desc "DGMO diagram markup language — render .dgmo files to PNG/SVG"
   homepage "https://github.com/diagrammo/dgmo"
-  url "https://registry.npmjs.org/@diagrammo/dgmo/-/dgmo-0.10.4.tgz"
-  sha256 "28a31da3ea4fd4add866c8f8c5ed8d152209ee21e973e6cb1a6034b86ee56464"
+  url "https://registry.npmjs.org/@diagrammo/dgmo/-/dgmo-0.11.1.tgz"
+  sha256 "7c107009c6f625a56ddc3ae491fa9bb7fa694078e02483fc6d94055b2f935b28"
   license "MIT"
 
   depends_on "node"
