@@ -26,7 +26,7 @@ dgmo --help
 | Option | Values | Default |
 |--------|--------|---------|
 | `--theme` | `light`, `dark`, `transparent` | `light` |
-| `--palette` | `slate`, `atlas`, `blueprint`, `facet`, `tidewater`, `nord`, `catppuccin`, `tokyo-night` | `slate` |
+| `--palette` | `slate`, `atlas`, `blueprint`, `tidewater`, `nord`, `catppuccin`, `tokyo-night` | `slate` |
 | `-o` | Output file path (`.svg` → SVG, otherwise PNG) | `<input>.png` |
 
 ## Update
