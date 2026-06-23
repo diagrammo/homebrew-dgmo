@@ -7,8 +7,24 @@ class Dgmo < Formula
 
   depends_on "node"
 
+  # Vendor the MCP server so `brew upgrade dgmo` upgrades BOTH as a tested pair —
+  # the user never installs or updates it separately. `dgmo mcp` finds this
+  # `dgmo-mcp` on PATH and execs it. The dgmo release workflow bumps this
+  # resource's url + sha256 to the latest dgmo-mcp at each release.
+  resource "dgmo-mcp" do
+    url "https://registry.npmjs.org/@diagrammo/dgmo-mcp/-/dgmo-mcp-0.3.2.tgz"
+    sha256 "2b94066da17a0d0b2ce7031ce98c52b2996128c0e694afbb8e014ab441470838"
+  end
+
   def install
+    # The dgmo CLI.
     system "npm", "install", *std_npm_args
+
+    # The bundled MCP server, into the same prefix.
+    resource("dgmo-mcp").stage do
+      system "npm", "install", *std_npm_args(prefix: libexec)
+    end
+
     bin.install_symlink libexec.glob("bin/*")
 
     # cli.cjs externalizes @resvg/resvg-js and jsdom; both load assets via fs
@@ -18,13 +34,16 @@ class Dgmo < Formula
     pkg = libexec/"lib/node_modules/@diagrammo/dgmo"
     rm_r pkg/"src" if (pkg/"src").exist?
     Dir[pkg/"dist/index.*"].each { |f| rm f }
-
   end
 
   def caveats
     <<~EOS
-      To add the dgmo skill to Claude Code (enables /dgmo in any project):
-        dgmo --install-claude-skill
+      To set up AI assistants (Claude Code, Codex, Claude Desktop, Cursor, …),
+      run one command — it auto-detects what you have, no prompts:
+        dgmo install
+
+      The MCP server is bundled and upgrades automatically with this formula.
+      Re-run `dgmo install` after upgrading only to refresh the skill files.
 
       The 'diagrammo' command is now installed automatically by the Diagrammo
       desktop app on first launch. Get the app at https://diagrammo.app/download
@@ -33,5 +52,7 @@ class Dgmo < Formula
 
   test do
     assert_match version.to_s, shell_output("#{bin}/dgmo --version")
+    # The bundled MCP server binary is present.
+    assert_path_exists bin/"dgmo-mcp"
   end
 end
