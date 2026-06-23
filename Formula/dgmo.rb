@@ -1,8 +1,8 @@
 class Dgmo < Formula
   desc "DGMO diagram markup language — render .dgmo files to PNG/SVG"
   homepage "https://github.com/diagrammo/dgmo"
-  url "https://registry.npmjs.org/@diagrammo/dgmo/-/dgmo-0.36.0.tgz"
-  sha256 "1a1d84bda0bad7a74cd5d22fc6f44b51f151d6bf7fcd27f29ff603d60ddd53c5"
+  url "https://registry.npmjs.org/@diagrammo/dgmo/-/dgmo-0.37.0.tgz"
+  sha256 "035b4ac2cb278c5cb17a0ebc5548579ef86d0d5e8d45eb458e2e8363d813c7d2"
   license "MIT"
 
   depends_on "node"
@@ -12,8 +12,8 @@ class Dgmo < Formula
   # `dgmo-mcp` on PATH and execs it. The dgmo release workflow bumps this
   # resource's url + sha256 to the latest dgmo-mcp at each release.
   resource "dgmo-mcp" do
-    url "https://registry.npmjs.org/@diagrammo/dgmo-mcp/-/dgmo-mcp-0.4.0.tgz"
-    sha256 "7e501b5d786ea56fb6c8c05bc7ad6ae8bdeea5c6af6718b9ad3990651f84b0ef"
+    url "https://registry.npmjs.org/@diagrammo/dgmo-mcp/-/dgmo-mcp-0.4.1.tgz"
+    sha256 "ca14f4f33b8a4a90eaecc329cf06250607e90eb80fc29524e0f2d35701abce1a"
   end
 
   def install
