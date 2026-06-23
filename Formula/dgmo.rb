@@ -23,8 +23,9 @@ class Dgmo < Formula
 
   def caveats
     <<~EOS
-      To add the dgmo skill to Claude Code (enables /dgmo in any project):
-        dgmo install claude-code
+      To set up AI assistants (Claude Code, Codex, Claude Desktop, Cursor, …),
+      run one command — it auto-detects what you have, no prompts:
+        dgmo install
 
       The 'diagrammo' command is now installed automatically by the Diagrammo
       desktop app on first launch. Get the app at https://diagrammo.app/download
