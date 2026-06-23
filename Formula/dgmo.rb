@@ -27,6 +27,9 @@ class Dgmo < Formula
       run one command — it auto-detects what you have, no prompts:
         dgmo install
 
+      Re-run `dgmo install` after upgrading to refresh the skills and the
+      MCP server (its tools ship in a separate package).
+
       The 'diagrammo' command is now installed automatically by the Diagrammo
       desktop app on first launch. Get the app at https://diagrammo.app/download
     EOS
