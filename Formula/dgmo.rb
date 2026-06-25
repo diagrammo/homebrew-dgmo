@@ -17,12 +17,22 @@ class Dgmo < Formula
   end
 
   def install
+    # Homebrew's std_npm_args injects `--min-release-age 1`, a 24h supply-chain
+    # embargo that refuses any npm package published in the last day. Our own
+    # freshly-cut releases can't satisfy that on release day, and the dgmo-mcp
+    # resource re-resolves `@diagrammo/dgmo` from the registry — so a same-day
+    # `brew upgrade dgmo` would fail with ETARGET until the tarballs aged out.
+    # CLI flags are last-wins in npm, so appending `--min-release-age=0`
+    # overrides the embargo. (sed in the release workflow rewrites only the
+    # url/sha lines, so this stays put across every bump.)
+    no_embargo = "--min-release-age=0"
+
     # The dgmo CLI.
-    system "npm", "install", *std_npm_args
+    system "npm", "install", *std_npm_args, no_embargo
 
     # The bundled MCP server, into the same prefix.
     resource("dgmo-mcp").stage do
-      system "npm", "install", *std_npm_args(prefix: libexec)
+      system "npm", "install", *std_npm_args(prefix: libexec), no_embargo
     end
 
     bin.install_symlink libexec.glob("bin/*")
