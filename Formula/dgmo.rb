@@ -13,7 +13,7 @@ class Dgmo < Formula
   # resource's url + sha256 to the latest dgmo-mcp at each release.
   resource "dgmo-mcp" do
     url "https://registry.npmjs.org/@diagrammo/dgmo-mcp/-/dgmo-mcp-0.5.0.tgz"
-    sha256 "f971d97fd1bcaf85f0ccf0cbe52b7604638565b834df851fefabfa34b4fe9238"
+    sha256 "d2a16023048884e166d6ed412027fe50b45f34bd770ffeb41940e4ec6800039e"
   end
 
   def install
