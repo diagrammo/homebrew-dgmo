@@ -12,8 +12,8 @@ class Dgmo < Formula
   # `dgmo-mcp` on PATH and execs it. The dgmo release workflow bumps this
   # resource's url + sha256 to the latest dgmo-mcp at each release.
   resource "dgmo-mcp" do
-    url "https://registry.npmjs.org/@diagrammo/dgmo-mcp/-/dgmo-mcp-0.6.0.tgz"
-    sha256 "03ee9d8d02bc035f5c4a173ad6ccc622075a40d1001e6db1d2e0cbc6608411f6"
+    url "https://registry.npmjs.org/@diagrammo/dgmo-mcp/-/dgmo-mcp-0.7.0.tgz"
+    sha256 "f3900cb9361bd8fdb6d1a44f4a7f5dd1fbdd8c0b6322778532d51ee6770c962c"
   end
 
   def install
