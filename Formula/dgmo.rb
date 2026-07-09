@@ -8,9 +8,13 @@ class Dgmo < Formula
   depends_on "node"
 
   # Vendor the MCP server so `brew upgrade dgmo` upgrades BOTH as a tested pair —
-  # the user never installs or updates it separately. `dgmo mcp` finds this
-  # `dgmo-mcp` on PATH and execs it. The dgmo release workflow bumps this
-  # resource's url + sha256 to the latest dgmo-mcp at each release.
+  # the user never installs or updates it separately. It's staged as a sibling of
+  # @diagrammo/dgmo under the same node_modules; `dgmo mcp` resolves it by
+  # absolute path (see cli.ts `bundledMcpEntry`), so we deliberately do NOT put a
+  # `dgmo-mcp` binary on PATH — that path used to collide with a stale
+  # `npm i -g @diagrammo/dgmo-mcp` symlink and abort `brew link`, leaving `dgmo`
+  # itself unlinked. The dgmo release workflow bumps this resource's url + sha256
+  # to the latest dgmo-mcp at each release.
   resource "dgmo-mcp" do
     url "https://registry.npmjs.org/@diagrammo/dgmo-mcp/-/dgmo-mcp-0.9.1.tgz"
     sha256 "92679703a3c7bb8890c37a9ef539310e18e91228bc8d448058571c836ad2e173"
@@ -35,7 +39,10 @@ class Dgmo < Formula
       system "npm", "install", *std_npm_args(prefix: libexec), no_embargo
     end
 
-    bin.install_symlink libexec.glob("bin/*")
+    # Link ONLY the dgmo CLI onto PATH. The bundled dgmo-mcp binary is left
+    # unlinked on purpose (see the resource comment above) — `dgmo mcp` execs it
+    # by absolute path, so a PATH symlink would only reintroduce the collision.
+    bin.install_symlink libexec/"bin/dgmo"
 
     # cli.cjs externalizes @resvg/resvg-js and jsdom; both load assets via fs
     # at runtime and pull in transitive deps, so the full node_modules tree
@@ -44,6 +51,24 @@ class Dgmo < Formula
     pkg = libexec/"lib/node_modules/@diagrammo/dgmo"
     rm_r pkg/"src" if (pkg/"src").exist?
     Dir[pkg/"dist/index.*"].each { |f| rm f }
+  end
+
+  # Heal machines left broken by the old install path. A previous
+  # `npm i -g @diagrammo/dgmo-mcp` (or an older formula that symlinked the
+  # server onto PATH) leaves `<prefix>/bin/dgmo-mcp` pointing outside this keg.
+  # That symlink is what used to abort `brew link` and leave `dgmo` itself
+  # unlinked. We no longer put a dgmo-mcp binary on PATH — `dgmo mcp` resolves
+  # the bundled server by absolute path — so any such symlink is now a stale
+  # orphan (often dangling) that shadows nothing useful. Sweep it. Guarded to
+  # only touch a foreign/dangling dgmo-mcp symlink, never a real file. Non-fatal
+  # by design: Homebrew rescues post_install errors and `dgmo` is already linked.
+  def post_install
+    stale = HOMEBREW_PREFIX/"bin/dgmo-mcp"
+    return unless stale.symlink?
+
+    dangling = !stale.exist?
+    npm_global = stale.readlink.to_s.include?("node_modules/@diagrammo/dgmo-mcp")
+    stale.unlink if dangling || npm_global
   end
 
   def caveats
@@ -62,7 +87,9 @@ class Dgmo < Formula
 
   test do
     assert_match version.to_s, shell_output("#{bin}/dgmo --version")
-    # The bundled MCP server binary is present.
-    assert_path_exists bin/"dgmo-mcp"
+    # The bundled MCP server is staged as a sibling (resolved by `dgmo mcp` via
+    # absolute path), NOT symlinked onto PATH.
+    assert_path_exists libexec/"lib/node_modules/@diagrammo/dgmo-mcp/dist/index.js"
+    refute_path_exists bin/"dgmo-mcp"
   end
 end
