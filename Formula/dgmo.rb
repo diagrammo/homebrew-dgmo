@@ -16,8 +16,8 @@ class Dgmo < Formula
   # itself unlinked. The dgmo release workflow bumps this resource's url + sha256
   # to the latest dgmo-mcp at each release.
   resource "dgmo-mcp" do
-    url "https://registry.npmjs.org/@diagrammo/dgmo-mcp/-/dgmo-mcp-0.12.0.tgz"
-    sha256 "531689d66f9deb9e8a25f994830ed1dfcae3bec349646600a24f13cca61e6765"
+    url "https://registry.npmjs.org/@diagrammo/dgmo-mcp/-/dgmo-mcp-0.14.0.tgz"
+    sha256 "19c8e9f8297167e4bfe39895397b86494abb4a5727dae92d427b45306d53d674"
   end
 
   def install
