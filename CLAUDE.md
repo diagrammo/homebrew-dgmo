@@ -4,7 +4,9 @@ Not a codebase: two Ruby files. `Formula/dgmo.rb` installs the CLI from the npm 
 
 ## The formula is bumped by dgmo's release, not by hand
 
-`diagrammo/dgmo`'s `.github/workflows/release.yml` has a `bump-homebrew` job: it waits for the npm tarball, computes both sha256s, seds `Formula/dgmo.rb`, and opens a PR on this repo with `HOMEBREW_TAP_TOKEN`. It picks up whatever `npm view @diagrammo/dgmo-mcp version` returns, so **publish dgmo-mcp before dgmo** if the pair should move together.
+`diagrammo/dgmo`'s `.github/workflows/release.yml` has a `bump-homebrew` job: it waits for the npm tarball, computes both sha256s, seds `Formula/dgmo.rb`, and opens a PR on this repo with `HOMEBREW_TAP_TOKEN`. It picks up whatever `npm view @diagrammo/dgmo-mcp version` returns at the moment dgmo's release runs (`release.yml:81`).
+
+⚠️ **This pulls against the workspace release order, and the workspace wins.** `dgmo` publishes before `dgmo-mcp`, because mcp depends on dgmo — so in a joint release the formula PR vendors the *previous* mcp version. Either re-bump the `resource "dgmo-mcp"` block by hand once mcp is on npm, or accept the lag for a release. The instruction that used to live here — "publish dgmo-mcp before dgmo" — inverts the dependency and should not be followed. Reconciled 2026-07-31.
 
 🔴 The file holds **two** `url`/`sha256` pairs — the top-level dgmo one and the vendored `resource "dgmo-mcp"` block. The workflow anchors on indentation (`^  url` vs `^    url`). A global `sed 's|sha256 ".*"|…|'` overwrites the mcp sha with dgmo's; that happened during the dgmo 0.54.0 release on 2026-07-20. Bumping by hand: scope the edit per block, and use Edit rather than a perl one-liner for the url — `@diagrammo` in a perl replacement interpolates as an empty array and yields `registry.npmjs.org//dgmo-mcp`.
 
