@@ -14,7 +14,23 @@ Not a codebase: two Ruby files. `Formula/dgmo.rb` installs the CLI from the npm 
 
 Homebrew's `std_npm_args` injects `--min-release-age 1`, a 24h supply-chain embargo on freshly published npm packages, and the `dgmo-mcp` resource's `npm install` re-resolves `@diagrammo/dgmo` from the registry — so a same-day `brew upgrade dgmo` failed with ETARGET until the tarballs aged out. Both `npm install` calls append `--min-release-age=0` (npm CLI flags are last-wins). It lives in the `install` method, which the release sed only-touches-url/sha never rewrites. If a fresh release's `brew upgrade` ETARGETs, check that flag first.
 
-## dgmo-mcp is vendored, never on PATH
+## ⚠️ The formula is about to change shape — do not bump it blindly
+
+On **2026-08-06** the `dgmo` command moved out of `@diagrammo/dgmo` into its own npm package, **`@diagrammo/dgmo-cli`** (`dgmo` commit `dc7c7425`). The library kept the renderer; the CLI package took the `bin`, `@resvg/resvg-js` and the AI rules files. **The formula still points at the old package and has not been touched**, because a formula whose `url` names an unpublished tarball breaks `brew install` for everyone the moment it merges. Nothing here is wrong yet — it is correct for the last published release and stale for the next one.
+
+When `@diagrammo/dgmo-cli` is published, in one pass:
+
+- point the top-level `url`/`sha256` at the `@diagrammo/dgmo-cli` tarball
+- **delete the whole `resource "dgmo-mcp"` block.** `@diagrammo/dgmo-mcp` is now an ordinary dependency of the CLI package, so npm installs it — there is nothing to vendor and nothing to stage as a sibling
+- drop the `rm_r pkg/"src"` / `Dir[pkg/"dist/index.*"]` strip; the CLI package ships only `dist/`, `fonts/` and the rules files, so there is nothing to strip
+- retarget the `test` block's `assert_path_exists` at wherever npm puts the server under the CLI package
+- **keep** `--min-release-age=0`, **keep** the `post_install` sweep, and **keep** `refute_path_exists bin/"dgmo-mcp"`
+
+Also: `dgmo`'s `.github/workflows/release.yml` `bump-homebrew` job seds **two** `url`/`sha256` pairs anchored on indentation. After the resource block goes there is only one, so that job must be rewritten in the same pass or it will corrupt the formula.
+
+## dgmo-mcp is vendored, never on PATH — until the formula is retargeted
+
+**This describes the currently-published formula. The sibling-staging half of it stops being true once the formula moves to `@diagrammo/dgmo-cli` — see the section above — because `bundledMcpEntry` became a plain `require.resolve` on 2026-08-06. The "never on PATH" half stays true and stays load-bearing.**
 
 The MCP server is staged as a sibling under the same `node_modules` so `brew upgrade dgmo` upgrades a tested CLI+server pair. `dgmo mcp` resolves it by absolute path (`bundledMcpEntry` in dgmo's `cli.ts`), so no `dgmo-mcp` binary is linked — a PATH symlink collided with a stale `npm i -g @diagrammo/dgmo-mcp` and aborted `brew link`, leaving `dgmo` itself unlinked. `post_install` sweeps that orphan; the `test` block asserts `bin/dgmo-mcp` does **not** exist. Don't "fix" either by linking it.
 
