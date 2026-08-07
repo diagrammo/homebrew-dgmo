@@ -1,61 +1,41 @@
 class Dgmo < Formula
-  desc "DGMO diagram markup language — render .dgmo files to PNG/SVG"
+  desc "Render .dgmo diagram files to PNG or SVG from the terminal"
   homepage "https://github.com/diagrammo/dgmo"
-  url "https://registry.npmjs.org/@diagrammo/dgmo/-/dgmo-0.60.0.tgz"
-  sha256 "d744a490b68cda82676d3d81d96141d8dbe5f6e2dfb2c3e5f9f794c05937edab"
+  url "https://registry.npmjs.org/@diagrammo/dgmo-cli/-/dgmo-cli-0.62.0.tgz"
+  sha256 "9f751381e4ab21b41188ebb1f3e45bd354117c79a30fa5b4f12235f4c939eb90"
   license "MIT"
 
   depends_on "node"
 
-  # Vendor the MCP server so `brew upgrade dgmo` upgrades BOTH as a tested pair —
-  # the user never installs or updates it separately. It's staged as a sibling of
-  # @diagrammo/dgmo under the same node_modules; `dgmo mcp` resolves it by
-  # absolute path (see cli.ts `bundledMcpEntry`), so we deliberately do NOT put a
-  # `dgmo-mcp` binary on PATH — that path used to collide with a stale
-  # `npm i -g @diagrammo/dgmo-mcp` symlink and abort `brew link`, leaving `dgmo`
-  # itself unlinked. The dgmo release workflow bumps this resource's url + sha256
-  # to the latest dgmo-mcp at each release.
-  resource "dgmo-mcp" do
-    url "https://registry.npmjs.org/@diagrammo/dgmo-mcp/-/dgmo-mcp-0.17.0.tgz"
-    sha256 "856f234035e3065dc776650c85c11889bc11c8c66e516aeb1d8e8dd99f8f05f6"
-  end
-
   def install
     # Homebrew's std_npm_args injects `--min-release-age 1`, a 24h supply-chain
     # embargo that refuses any npm package published in the last day. Our own
-    # freshly-cut releases can't satisfy that on release day, and the dgmo-mcp
-    # resource re-resolves `@diagrammo/dgmo` from the registry — so a same-day
-    # `brew upgrade dgmo` would fail with ETARGET until the tarballs aged out.
-    # CLI flags are last-wins in npm, so appending `--min-release-age=0`
+    # freshly-cut releases can't satisfy that on release day — @diagrammo/dgmo-mcp
+    # is a dependency of this package and is published in the same cascade, so a
+    # same-day `brew upgrade dgmo` would fail with ETARGET until the tarballs aged
+    # out. CLI flags are last-wins in npm, so appending `--min-release-age=0`
     # overrides the embargo. (sed in the release workflow rewrites only the
     # url/sha lines, so this stays put across every bump.)
     no_embargo = "--min-release-age=0"
 
-    # The dgmo CLI.
+    # The dgmo CLI. @diagrammo/dgmo-mcp comes down with it as an ordinary
+    # dependency — that is how `brew upgrade dgmo` still upgrades a tested
+    # CLI+server pair, since the CLI pins the server it was released against.
     system "npm", "install", *std_npm_args, no_embargo
 
-    # The bundled MCP server, into the same prefix.
-    resource("dgmo-mcp").stage do
-      system "npm", "install", *std_npm_args(prefix: libexec), no_embargo
-    end
-
-    # Link ONLY the dgmo CLI onto PATH. The bundled dgmo-mcp binary is left
-    # unlinked on purpose (see the resource comment above) — `dgmo mcp` execs it
-    # by absolute path, so a PATH symlink would only reintroduce the collision.
+    # Link ONLY the dgmo CLI onto PATH. npm doesn't link a dependency's bin, and
+    # we don't either: `dgmo mcp` resolves the server by absolute path (see
+    # cli.ts `bundledMcpEntry`), and a PATH symlink used to collide with a stale
+    # `npm i -g @diagrammo/dgmo-mcp` and abort `brew link`, leaving `dgmo` itself
+    # unlinked.
     bin.install_symlink libexec/"bin/dgmo"
-
-    # cli.cjs externalizes @resvg/resvg-js and jsdom; both load assets via fs
-    # at runtime and pull in transitive deps, so the full node_modules tree
-    # must remain intact. Only strip library build artifacts not needed by
-    # the CLI.
-    pkg = libexec/"lib/node_modules/@diagrammo/dgmo"
-    rm_r pkg/"src" if (pkg/"src").exist?
-    Dir[pkg/"dist/index.*"].each { |f| rm f }
   end
 
   # Heal machines left broken by the old install path. A previous
   # `npm i -g @diagrammo/dgmo-mcp` (or an older formula that symlinked the
   # server onto PATH) leaves `<prefix>/bin/dgmo-mcp` pointing outside this keg.
+  # (Also swept: the 0.60.0-and-earlier formula installed @diagrammo/dgmo, which
+  # carried the `dgmo` bin itself; the keg is replaced wholesale on upgrade.)
   # That symlink is what used to abort `brew link` and leave `dgmo` itself
   # unlinked. We no longer put a dgmo-mcp binary on PATH — `dgmo mcp` resolves
   # the bundled server by absolute path — so any such symlink is now a stale
@@ -87,9 +67,14 @@ class Dgmo < Formula
 
   test do
     assert_match version.to_s, shell_output("#{bin}/dgmo --version")
-    # The bundled MCP server is staged as a sibling (resolved by `dgmo mcp` via
-    # absolute path), NOT symlinked onto PATH.
-    assert_path_exists libexec/"lib/node_modules/@diagrammo/dgmo-mcp/dist/index.js"
+    # The MCP server arrives as a dependency of the CLI package. Resolve it the
+    # way `dgmo mcp` does (cli.ts `bundledMcpEntry`) instead of asserting an npm
+    # layout path — npm nests it under the CLI package today and may hoist it
+    # tomorrow, and either is fine so long as require.resolve finds it.
+    cd libexec/"lib/node_modules/@diagrammo/dgmo-cli" do
+      system "node", "-e", "require.resolve('@diagrammo/dgmo-mcp/dist/index.js')"
+    end
+    # Still never on PATH.
     refute_path_exists bin/"dgmo-mcp"
   end
 end
