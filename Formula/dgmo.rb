@@ -1,8 +1,8 @@
 class Dgmo < Formula
   desc "Render .dgmo diagram files to PNG or SVG from the terminal"
   homepage "https://github.com/diagrammo/dgmo"
-  url "https://registry.npmjs.org/@diagrammo/dgmo-cli/-/dgmo-cli-0.103.0.tgz"
-  sha256 "23d746ea349ff0e6972ebe3878b3ba30687db1a029661d92a6098bc5c7a349c1"
+  url "https://registry.npmjs.org/@diagrammo/dgmo-cli/-/dgmo-cli-0.104.0.tgz"
+  sha256 "3dfdfcfb508b9bce528fb2a3d5979f28d7633e14790a0e76b2257381ac6eccb8"
   license "MIT"
 
   depends_on "node"
